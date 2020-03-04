@@ -7,7 +7,7 @@ public class SEW4B_Projekt_1920_drihox {
         ProjektGUI g=new ProjektGUI();
         g.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         g.pack();
-        g.setSize(500,500);
+        g.setSize(600,600);
         g.setVisible(true);
     }
     

@@ -5,18 +5,44 @@
  */
 package sew4b_projekt_1920_drihox;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import javax.swing.JOptionPane;
+
 /**
  *
  * @author drihox15
  */
 public class ProjektGUI extends javax.swing.JFrame {
-
-    /**
-     * Creates new form ProjektGUI
-     */
+    String server;
+    String port;
+    String user;
+    String pwd;
+    String db;
+    String url;
+    Connection con=null;
+    DatabaseMetaData md=null;
+    
     public ProjektGUI() {
         initComponents();
+        
+        try{
+            Class.forName("com.mysql.jdbc.Driver");
+        } 
+        catch(ClassNotFoundException ex){
+            JOptionPane.showMessageDialog(this, "Fehler beim Herunterladen des Treibers", "Fehler", JOptionPane.ERROR_MESSAGE);
+        }
+        
+        btnDisconnect.setEnabled(false);
+        tabData.setEnabled(false);
+        btnDelete.setEnabled(false);
+        btnInsert.setEnabled(false);
+        cbxTables.setEnabled(false);
     }
+
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -57,7 +83,13 @@ public class ProjektGUI extends javax.swing.JFrame {
 
         lbDB.setText("Database:");
 
-        cbxTables.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        txtServer.setText("localhost");
+
+        txtPort.setText("3306");
+
+        txtDB.setText("sew_4b_projekt");
+
+        txtUsername.setText("root");
 
         tabData.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -69,16 +101,39 @@ public class ProjektGUI extends javax.swing.JFrame {
             new String [] {
                 "Title 1", "Title 2", "Title 3"
             }
-        ));
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, true, true
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
         jScrollPane1.setViewportView(tabData);
+        if (tabData.getColumnModel().getColumnCount() > 0) {
+            tabData.getColumnModel().getColumn(0).setResizable(false);
+            tabData.getColumnModel().getColumn(1).setResizable(false);
+            tabData.getColumnModel().getColumn(2).setResizable(false);
+        }
 
         btnInsert.setText("Insert");
 
         btnDelete.setText("Delete");
 
         btnConnect.setText("Connect");
+        btnConnect.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnConnectActionPerformed(evt);
+            }
+        });
 
         btnDisconnect.setText("Disconnect");
+        btnDisconnect.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDisconnectActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -158,8 +213,71 @@ public class ProjektGUI extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    
-    
+    private void btnConnectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConnectActionPerformed
+        server=txtServer.getText();
+        port=txtPort.getText();
+        user=txtUsername.getText();
+        pwd=txtPassword.getText();
+        db=txtDB.getText();
+        url="jdbc:mysql://"+server+":"+port+"/"+db;
+        
+        try{
+            con=DriverManager.getConnection(url, user, pwd);
+            
+            btnDisconnect.setEnabled(true);
+            tabData.setEnabled(true);
+            btnDelete.setEnabled(true);
+            btnInsert.setEnabled(true);
+            cbxTables.setEnabled(true);
+            
+            txtDB.setEnabled(false);
+            txtPassword.setEnabled(false);
+            txtPort.setEnabled(false);
+            txtServer.setEnabled(false);
+            txtUsername.setEnabled(false);
+            btnConnect.setEnabled(false);
+        } 
+        catch(SQLException ex){
+            JOptionPane.showMessageDialog(this, "Fehler bei der Verbindung", "Fehler", JOptionPane.ERROR_MESSAGE);
+        }
+        
+        try{
+            md=con.getMetaData();
+            ResultSet rs=md.getTables(null, null, null, null);
+            while(rs.next()){
+                cbxTables.addItem(rs.getString("TABLE_NAME"));
+            }
+        } 
+        catch(SQLException ex){
+            JOptionPane.showMessageDialog(this, "Fehler bei der Tabellenanzeige", "Fehler", JOptionPane.ERROR_MESSAGE);
+        }
+        
+        
+    }//GEN-LAST:event_btnConnectActionPerformed
+
+    private void btnDisconnectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDisconnectActionPerformed
+        try{
+            con.close();
+            
+            btnDisconnect.setEnabled(false);
+            tabData.setEnabled(false);
+            btnDelete.setEnabled(false);
+            btnInsert.setEnabled(false);
+            cbxTables.setEnabled(false);
+            cbxTables.removeAllItems();
+            
+            txtDB.setEnabled(true);
+            txtPassword.setEnabled(true);
+            txtPort.setEnabled(true);
+            txtServer.setEnabled(true);
+            txtUsername.setEnabled(true);
+            btnConnect.setEnabled(true);
+        }
+        catch(SQLException ex){
+            System.out.println("Fehler beim Schliessen der Verbindung.");
+        }
+    }//GEN-LAST:event_btnDisconnectActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnConnect;
     private javax.swing.JButton btnDelete;
