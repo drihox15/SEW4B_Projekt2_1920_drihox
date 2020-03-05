@@ -8,9 +8,12 @@ package sew4b_projekt_1920_drihox;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -25,6 +28,7 @@ public class ProjektGUI extends javax.swing.JFrame {
     String url;
     Connection con=null;
     DatabaseMetaData md=null;
+    DefaultTableModel tm=new DefaultTableModel();
     
     public ProjektGUI() {
         initComponents();
@@ -41,6 +45,8 @@ public class ProjektGUI extends javax.swing.JFrame {
         btnDelete.setEnabled(false);
         btnInsert.setEnabled(false);
         cbxTables.setEnabled(false);
+        
+        tabData.setModel(tm);
     }
 
 
@@ -252,7 +258,42 @@ public class ProjektGUI extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Fehler bei der Tabellenanzeige", "Fehler", JOptionPane.ERROR_MESSAGE);
         }
         
+        String docSelect="SELECT * FROM doctor;";
+        String deptSelect="SELECT * FROM department;";
+        PreparedStatement stmt;
         
+        try{
+            if(cbxTables.getSelectedItem().toString().equals("department")){
+                stmt=con.prepareStatement(deptSelect);
+                ResultSet rs=stmt.executeQuery();
+                while(rs.next()){
+                    Object o[]={
+                        rs.getInt("deptID"),
+                        rs.getString("name"),
+                        rs.getString("size")
+                    };
+                    tm.addRow(o);
+                }
+            }
+            else{
+                stmt=con.prepareStatement(docSelect);
+                ResultSet rs=stmt.executeQuery();
+                while(rs.next()){
+                    Object o[]={
+                        rs.getInt("ID"),
+                        rs.getString("vorname"),
+                        rs.getString("nachname"),
+                        rs.getInt("deptID")
+                    };
+                    tm.addRow(o);
+                }
+            }
+            tabData.setModel(tm);
+        }
+        catch(SQLException ex){
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Fehler beim Select-Statement.", "Fehler", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btnConnectActionPerformed
 
     private void btnDisconnectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDisconnectActionPerformed
