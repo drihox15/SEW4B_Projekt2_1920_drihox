@@ -28,7 +28,8 @@ public class ProjektGUI extends javax.swing.JFrame {
     String url;
     Connection con=null;
     DatabaseMetaData md=null;
-    DefaultTableModel tm=new DefaultTableModel();
+    DefaultTableModel tm;
+    PreparedStatement stmt;
     
     public ProjektGUI() {
         initComponents();
@@ -45,8 +46,7 @@ public class ProjektGUI extends javax.swing.JFrame {
         btnDelete.setEnabled(false);
         btnInsert.setEnabled(false);
         cbxTables.setEnabled(false);
-        
-        tabData.setModel(tm);
+        tabData.setModel(new DefaultTableModel());
     }
 
 
@@ -96,6 +96,12 @@ public class ProjektGUI extends javax.swing.JFrame {
         txtDB.setText("sew_4b_projekt");
 
         txtUsername.setText("root");
+
+        cbxTables.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbxTablesActionPerformed(evt);
+            }
+        });
 
         tabData.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -246,7 +252,6 @@ public class ProjektGUI extends javax.swing.JFrame {
         catch(SQLException ex){
             JOptionPane.showMessageDialog(this, "Fehler bei der Verbindung", "Fehler", JOptionPane.ERROR_MESSAGE);
         }
-        
         try{
             md=con.getMetaData();
             ResultSet rs=md.getTables(null, null, null, null);
@@ -256,43 +261,6 @@ public class ProjektGUI extends javax.swing.JFrame {
         } 
         catch(SQLException ex){
             JOptionPane.showMessageDialog(this, "Fehler bei der Tabellenanzeige", "Fehler", JOptionPane.ERROR_MESSAGE);
-        }
-        
-        String docSelect="SELECT * FROM doctor;";
-        String deptSelect="SELECT * FROM department;";
-        PreparedStatement stmt;
-        
-        try{
-            if(cbxTables.getSelectedItem().toString().equals("department")){
-                stmt=con.prepareStatement(deptSelect);
-                ResultSet rs=stmt.executeQuery();
-                while(rs.next()){
-                    Object o[]={
-                        rs.getInt("deptID"),
-                        rs.getString("name"),
-                        rs.getString("size")
-                    };
-                    tm.addRow(o);
-                }
-            }
-            else{
-                stmt=con.prepareStatement(docSelect);
-                ResultSet rs=stmt.executeQuery();
-                while(rs.next()){
-                    Object o[]={
-                        rs.getInt("ID"),
-                        rs.getString("vorname"),
-                        rs.getString("nachname"),
-                        rs.getInt("deptID")
-                    };
-                    tm.addRow(o);
-                }
-            }
-            tabData.setModel(tm);
-        }
-        catch(SQLException ex){
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Fehler beim Select-Statement.", "Fehler", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_btnConnectActionPerformed
 
@@ -313,11 +281,58 @@ public class ProjektGUI extends javax.swing.JFrame {
             txtServer.setEnabled(true);
             txtUsername.setEnabled(true);
             btnConnect.setEnabled(true);
+            tabData.setModel(new DefaultTableModel());
         }
         catch(SQLException ex){
             System.out.println("Fehler beim Schliessen der Verbindung.");
         }
     }//GEN-LAST:event_btnDisconnectActionPerformed
+
+    private void cbxTablesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbxTablesActionPerformed
+            try{
+                String docSelect="SELECT * FROM doctor;";
+                String deptSelect="SELECT * FROM department;";
+                if(cbxTables.getSelectedItem()!=null){
+                    tm=new DefaultTableModel();
+                    if(cbxTables.getSelectedItem().toString().equals("department")){
+                        tm.addColumn("deptID");
+                        tm.addColumn("name");
+                        tm.addColumn("size");
+                        stmt=con.prepareStatement(deptSelect);
+                        ResultSet rs=stmt.executeQuery();
+                        while(rs.next()){
+                            Object o[]={
+                                rs.getInt("deptID"),
+                                rs.getString("name"),
+                                rs.getString("size")
+                            };
+                            tm.addRow(o);
+                        }
+                    }
+                    else{
+                        tm.addColumn("ID");
+                        tm.addColumn("vorname");
+                        tm.addColumn("nachanme");
+                        tm.addColumn("deptID");
+                        stmt=con.prepareStatement(docSelect);
+                        ResultSet rs=stmt.executeQuery();
+                        while(rs.next()){
+                            Object o[]={
+                                rs.getInt("ID"),
+                                rs.getString("vorname"),
+                                rs.getString("nachname"),
+                                rs.getInt("deptID")
+                            };
+                            tm.addRow(o);
+                        }
+                    }
+                    tabData.setModel(tm);
+                }
+            }
+            catch(SQLException ex){
+                JOptionPane.showMessageDialog(this, "Fehler beim Select-Statement.", "Fehler", JOptionPane.ERROR_MESSAGE);
+            }
+    }//GEN-LAST:event_cbxTablesActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnConnect;
