@@ -45,6 +45,7 @@ public class ProjektGUI extends javax.swing.JFrame {
         tabData.setEnabled(false);
         btnDelete.setEnabled(false);
         btnInsert.setEnabled(false);
+        btnUpdate.setEnabled(false);
         cbxTables.setEnabled(false);
         tabData.setModel(new DefaultTableModel());
     }
@@ -76,6 +77,7 @@ public class ProjektGUI extends javax.swing.JFrame {
         btnDelete = new javax.swing.JButton();
         btnConnect = new javax.swing.JButton();
         btnDisconnect = new javax.swing.JButton();
+        btnUpdate = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -130,8 +132,18 @@ public class ProjektGUI extends javax.swing.JFrame {
         }
 
         btnInsert.setText("Insert");
+        btnInsert.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnInsertActionPerformed(evt);
+            }
+        });
 
         btnDelete.setText("Delete");
+        btnDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDeleteActionPerformed(evt);
+            }
+        });
 
         btnConnect.setText("Connect");
         btnConnect.addActionListener(new java.awt.event.ActionListener() {
@@ -147,16 +159,20 @@ public class ProjektGUI extends javax.swing.JFrame {
             }
         });
 
+        btnUpdate.setText("Update");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(124, 124, 124)
+                .addGap(50, 50, 50)
                 .addComponent(btnInsert)
+                .addGap(118, 118, 118)
+                .addComponent(btnUpdate)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(btnDelete)
-                .addGap(132, 132, 132))
+                .addGap(58, 58, 58))
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -218,7 +234,8 @@ public class ProjektGUI extends javax.swing.JFrame {
                 .addGap(38, 38, 38)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnInsert)
-                    .addComponent(btnDelete))
+                    .addComponent(btnDelete)
+                    .addComponent(btnUpdate))
                 .addContainerGap(98, Short.MAX_VALUE))
         );
 
@@ -240,6 +257,7 @@ public class ProjektGUI extends javax.swing.JFrame {
             tabData.setEnabled(true);
             btnDelete.setEnabled(true);
             btnInsert.setEnabled(true);
+            btnUpdate.setEnabled(true);
             cbxTables.setEnabled(true);
             
             txtDB.setEnabled(false);
@@ -272,6 +290,7 @@ public class ProjektGUI extends javax.swing.JFrame {
             tabData.setEnabled(false);
             btnDelete.setEnabled(false);
             btnInsert.setEnabled(false);
+            btnUpdate.setEnabled(false);
             cbxTables.setEnabled(false);
             cbxTables.removeAllItems();
             
@@ -334,11 +353,79 @@ public class ProjektGUI extends javax.swing.JFrame {
             }
     }//GEN-LAST:event_cbxTablesActionPerformed
 
+    private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
+        String toDeleteID=JOptionPane.showInputDialog(this,"Enter ID: ");
+        PreparedStatement st=null;
+        try{
+            if(!toDeleteID.equals(null) && toDeleteID.matches("[0-9]+")){
+                if(cbxTables.getSelectedItem()!=null){
+                    if(cbxTables.getSelectedItem().toString().equals("department")){
+                        st=con.prepareStatement("DELETE FROM department WHERE deptID=?");
+                        st.setInt(1,Integer.parseInt(toDeleteID));
+                    }
+                    else{
+                        st=con.prepareStatement("DELETE FROM doctor WHERE ID=?");
+                        st.setInt(1,Integer.parseInt(toDeleteID));
+                    }
+                    st.executeUpdate(); 
+                }
+            }
+        }
+        catch(SQLException ex){
+            JOptionPane.showMessageDialog(this, "Fehler beim Delete-Statement.", "Fehler", JOptionPane.ERROR_MESSAGE);
+        }
+        catch(NullPointerException ex){
+            
+        }
+    }//GEN-LAST:event_btnDeleteActionPerformed
+
+    private void btnInsertActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnInsertActionPerformed
+        String[] buttons = {"Doctor", "Department"};
+        int result=JOptionPane.showOptionDialog(this, "Tabelle wählen", "Insert",
+        JOptionPane.INFORMATION_MESSAGE, 0, null, buttons, null);
+        String insert="";
+        PreparedStatement st=null;
+        try{
+            if(cbxTables.getSelectedItem()!=null){
+                if(result==0){
+                    insert="INSERT INTO doctor(vorname,nachname,deptID) VALUES(?,?,?)";
+                    st=con.prepareStatement(insert);
+                    
+                    String vn=JOptionPane.showInputDialog(this,"Name:");
+                    String nn=JOptionPane.showInputDialog(this,"Lastname:");
+                    String dId=JOptionPane.showInputDialog(this,"DeptID");
+                    if(!vn.equals("") && !nn.equals("") && !dId.equals("") && dId.matches("[0-9]+")){
+                        st.setString(1, vn);
+                        st.setString(2, nn);
+                        st.setInt(3, Integer.parseInt(dId));
+                    }
+                }
+                else if(result==1){
+                    insert="INSERT INTO department(name,size) VALUES(?,?)";
+                    st=con.prepareStatement(insert);
+                    
+                    String n=JOptionPane.showInputDialog(this,"Name:");
+                    String s=JOptionPane.showInputDialog(this,"Size:");
+                    
+                    if(!n.equals("") && !s.equals("") && s.matches("[0-9]+")){
+                        st.setString(1, n);
+                        st.setInt(2, Integer.parseInt(s));
+                    }
+                }
+                st.executeUpdate();
+            }
+        }
+        catch(SQLException ex){
+            JOptionPane.showMessageDialog(this, "Fehler beim Insert-Statement.", "Fehler", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_btnInsertActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnConnect;
     private javax.swing.JButton btnDelete;
     private javax.swing.JButton btnDisconnect;
     private javax.swing.JButton btnInsert;
+    private javax.swing.JButton btnUpdate;
     private javax.swing.JComboBox cbxTables;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel lbDB;
