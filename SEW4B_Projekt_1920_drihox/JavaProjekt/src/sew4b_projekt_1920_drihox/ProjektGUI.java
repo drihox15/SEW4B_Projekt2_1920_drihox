@@ -18,8 +18,19 @@ import javax.swing.table.DefaultTableModel;
 /**
  *
  * @author drihox15
+ * 
+ * 
+ * 
  */
+
+/*
+    EDITOR'S NOTE:
+    Hoffentlich passt meine Programmierung und Dokumentierung gut.
+    Habe die Methode mit JOptionPanes am leichtesten gefunden, und hoffe, dass das passt auch.
+*/
 public class ProjektGUI extends javax.swing.JFrame {
+    
+    //Benötigte Variablen, um das Code besser zu strukturieren und übersichtlicher zu halten.
     String server;
     String port;
     String user;
@@ -34,6 +45,7 @@ public class ProjektGUI extends javax.swing.JFrame {
     public ProjektGUI() {
         initComponents();
         
+        //Treiber laden.
         try{
             Class.forName("com.mysql.jdbc.Driver");
         } 
@@ -41,13 +53,14 @@ public class ProjektGUI extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Fehler beim Herunterladen des Treibers", "Fehler", JOptionPane.ERROR_MESSAGE);
         }
         
+        //Da unser App nicht verbunden ist, ist es sinnlos, die Buttons und die Tabelle zu aktivieren.
         btnDisconnect.setEnabled(false);
         tabData.setEnabled(false);
         btnDelete.setEnabled(false);
         btnInsert.setEnabled(false);
         btnUpdate.setEnabled(false);
         cbxTables.setEnabled(false);
-        tabData.setModel(new DefaultTableModel());
+        tabData.setModel(new DefaultTableModel()); //Die Tabelle ist leer.
     }
 
 
@@ -160,6 +173,11 @@ public class ProjektGUI extends javax.swing.JFrame {
         });
 
         btnUpdate.setText("Update");
+        btnUpdate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUpdateActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -243,16 +261,19 @@ public class ProjektGUI extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnConnectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConnectActionPerformed
+        //Variablen werden je nach Textfeld zugewiesen.
         server=txtServer.getText();
         port=txtPort.getText();
         user=txtUsername.getText();
         pwd=txtPassword.getText();
         db=txtDB.getText();
-        url="jdbc:mysql://"+server+":"+port+"/"+db;
+        url="jdbc:mysql://"+server+":"+port+"/"+db; //URL besteht aus Server, Port und Datenbank.
         
+        //Verbindungsblock.
         try{
-            con=DriverManager.getConnection(url, user, pwd);
+            con=DriverManager.getConnection(url, user, pwd); //Connectionvariable initialisieren.
             
+            //Die benötigten Komponenten aktivieren.
             btnDisconnect.setEnabled(true);
             tabData.setEnabled(true);
             btnDelete.setEnabled(true);
@@ -260,6 +281,7 @@ public class ProjektGUI extends javax.swing.JFrame {
             btnUpdate.setEnabled(true);
             cbxTables.setEnabled(true);
             
+            //Da wir verbunden sind, müssen wir nicht mehr unsere Daten eingeben und das Connect-Button drücken.
             txtDB.setEnabled(false);
             txtPassword.setEnabled(false);
             txtPort.setEnabled(false);
@@ -270,7 +292,10 @@ public class ProjektGUI extends javax.swing.JFrame {
         catch(SQLException ex){
             JOptionPane.showMessageDialog(this, "Fehler bei der Verbindung", "Fehler", JOptionPane.ERROR_MESSAGE);
         }
+        
+        //Tabellenanzeigeblock
         try{
+            //Hier werden die Tabellennamen im Combobox gesetzt.
             md=con.getMetaData();
             ResultSet rs=md.getTables(null, null, null, null);
             while(rs.next()){
@@ -283,9 +308,12 @@ public class ProjektGUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnConnectActionPerformed
 
     private void btnDisconnectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDisconnectActionPerformed
+        //Verbindungsschlussblock.
         try{
+            //Verbindung schliessen.
             con.close();
             
+            //Deaktivieren von Elementen, die die Verbindung benötigen.
             btnDisconnect.setEnabled(false);
             tabData.setEnabled(false);
             btnDelete.setEnabled(false);
@@ -294,6 +322,7 @@ public class ProjektGUI extends javax.swing.JFrame {
             cbxTables.setEnabled(false);
             cbxTables.removeAllItems();
             
+            //Setzen auf Anfangszustand.
             txtDB.setEnabled(true);
             txtPassword.setEnabled(true);
             txtPort.setEnabled(true);
@@ -308,65 +337,88 @@ public class ProjektGUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnDisconnectActionPerformed
 
     private void cbxTablesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbxTablesActionPerformed
-            try{
-                String docSelect="SELECT * FROM doctor;";
-                String deptSelect="SELECT * FROM department;";
-                if(cbxTables.getSelectedItem()!=null){
-                    tm=new DefaultTableModel();
-                    if(cbxTables.getSelectedItem().toString().equals("department")){
-                        tm.addColumn("deptID");
-                        tm.addColumn("name");
-                        tm.addColumn("size");
-                        stmt=con.prepareStatement(deptSelect);
-                        ResultSet rs=stmt.executeQuery();
-                        while(rs.next()){
-                            Object o[]={
-                                rs.getInt("deptID"),
-                                rs.getString("name"),
-                                rs.getString("size")
-                            };
-                            tm.addRow(o);
-                        }
+        //Tabellentausch beim Verwenden vom Combobox.  
+        try{
+            //Verschiedene Selects für jede Comboboxoption
+            String docSelect="SELECT * FROM doctor;";
+            String deptSelect="SELECT * FROM department;";
+            
+            //Hier ist der Block, wo die Logik vom Combobox ist.
+            if(cbxTables.getSelectedItem()!=null){ //Zuerst überprüfen, ob Combobox leer ist, da es beim Verbindungsschluss leer wird.
+                //Neues Table Model initialisieren.
+                tm=new DefaultTableModel();
+                
+                //Wenn wir "Department" wählen.
+                if(cbxTables.getSelectedItem().toString().equals("department")){
+                    //Die Spalten in der Tabelle addieren.
+                    tm.addColumn("deptID");
+                    tm.addColumn("name");
+                    tm.addColumn("size");
+                    
+                    //Das Statement vorbereiten und ausführen.
+                    stmt=con.prepareStatement(deptSelect);
+                    ResultSet rs=stmt.executeQuery();
+                    
+                    //Die Spaltennamen durchgehen und in unsere Tabelle vom GUI setzen.
+                    while(rs.next()){
+                        Object o[]={
+                            rs.getInt("deptID"),
+                            rs.getString("name"),
+                            rs.getString("size")
+                        };
+                        tm.addRow(o);
                     }
-                    else{
-                        tm.addColumn("ID");
-                        tm.addColumn("vorname");
-                        tm.addColumn("nachanme");
-                        tm.addColumn("deptID");
-                        stmt=con.prepareStatement(docSelect);
-                        ResultSet rs=stmt.executeQuery();
-                        while(rs.next()){
-                            Object o[]={
-                                rs.getInt("ID"),
-                                rs.getString("vorname"),
-                                rs.getString("nachname"),
-                                rs.getInt("deptID")
-                            };
-                            tm.addRow(o);
-                        }
-                    }
-                    tabData.setModel(tm);
                 }
+                //Wenn wir "Doctor" wählen.
+                else{
+                    //Die Spalten in der Tabelle addieren.
+                    tm.addColumn("ID");
+                    tm.addColumn("vorname");
+                    tm.addColumn("nachanme");
+                    tm.addColumn("deptID");
+                    
+                    //Das Statement vorbereiten und ausführen.
+                    stmt=con.prepareStatement(docSelect);
+                    ResultSet rs=stmt.executeQuery();
+                    
+                    //Die Spaltennamen durchgehen und in unsere Tabelle vom GUI setzen.
+                    while(rs.next()){
+                        Object o[]={
+                            rs.getInt("ID"),
+                            rs.getString("vorname"),
+                            rs.getString("nachname"),
+                            rs.getInt("deptID")
+                        };
+                        tm.addRow(o);
+                    }
+                }
+                //Das Model in der Tabelle setzen.
+                tabData.setModel(tm);
             }
-            catch(SQLException ex){
-                JOptionPane.showMessageDialog(this, "Fehler beim Select-Statement.", "Fehler", JOptionPane.ERROR_MESSAGE);
-            }
+        }
+        catch(SQLException ex){
+            JOptionPane.showMessageDialog(this, "Fehler beim Select-Statement.", "Fehler", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_cbxTablesActionPerformed
 
     private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
+        //JOptionPane fragt nach ID vom Datensatz zum Löschen.
         String toDeleteID=JOptionPane.showInputDialog(this,"Enter ID: ");
         PreparedStatement st=null;
         try{
-            if(!toDeleteID.equals(null) && toDeleteID.matches("[0-9]+")){
+            if(!toDeleteID.equals(null) && toDeleteID.matches("[0-9]+")){ //ID darf nicht leer sein und muss eine Zahl sein.
                 if(cbxTables.getSelectedItem()!=null){
+                    //Falls wir Department wählen, Statement anpassen und Parameter binden.
                     if(cbxTables.getSelectedItem().toString().equals("department")){
                         st=con.prepareStatement("DELETE FROM department WHERE deptID=?");
                         st.setInt(1,Integer.parseInt(toDeleteID));
                     }
+                    //Falls wir Doctor wählen, Statement anpassen und Parameter binden.
                     else{
                         st=con.prepareStatement("DELETE FROM doctor WHERE ID=?");
                         st.setInt(1,Integer.parseInt(toDeleteID));
                     }
+                    //Statement ausführen.
                     st.executeUpdate(); 
                 }
             }
@@ -380,6 +432,10 @@ public class ProjektGUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnDeleteActionPerformed
 
     private void btnInsertActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnInsertActionPerformed
+        /*
+        Hier haben wir ein JOptionPane mit 2 Buttons, 
+        das uns fragt, in welcher Tabelle wir was eingügen möchten.
+        */
         String[] buttons = {"Doctor", "Department"};
         int result=JOptionPane.showOptionDialog(this, "Tabelle wählen", "Insert",
         JOptionPane.INFORMATION_MESSAGE, 0, null, buttons, null);
@@ -387,6 +443,11 @@ public class ProjektGUI extends javax.swing.JFrame {
         PreparedStatement st=null;
         try{
             if(cbxTables.getSelectedItem()!=null){
+                /*
+                Falls wir Doctor wählen, dann das Insert anpassen und vorbereiten.
+                Dann werden 3 JOptionPanes angezeigt in einer Reihe, die nach den zu einfügenden Daten fragen.
+                Am Schluss, überprüfen ob die Eingaben nicht leer sind und die ID eine Zahl ist, dann die Parameter binden.
+                */
                 if(result==0){
                     insert="INSERT INTO doctor(vorname,nachname,deptID) VALUES(?,?,?)";
                     st=con.prepareStatement(insert);
@@ -400,6 +461,11 @@ public class ProjektGUI extends javax.swing.JFrame {
                         st.setInt(3, Integer.parseInt(dId));
                     }
                 }
+                /*
+                Falls wir Department wählen, dann das Insert anpassen und vorbereiten.
+                Dann werden 2 JOptionPanes angezeigt in einer Reihe, die nach den zu einfügenden Daten fragen.
+                Am Schluss, überprüfen ob die Eingaben nicht leer sind und Size eine Zahl ist, dann die Parameter binden.
+                */
                 else if(result==1){
                     insert="INSERT INTO department(name,size) VALUES(?,?)";
                     st=con.prepareStatement(insert);
@@ -412,6 +478,7 @@ public class ProjektGUI extends javax.swing.JFrame {
                         st.setInt(2, Integer.parseInt(s));
                     }
                 }
+                //Statement ausführen.
                 st.executeUpdate();
             }
         }
@@ -419,6 +486,67 @@ public class ProjektGUI extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Fehler beim Insert-Statement.", "Fehler", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_btnInsertActionPerformed
+
+    private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
+        /*
+        Hier haben wir ein JOptionPane mit 2 Buttons, 
+        das uns fragt, in welcher Tabelle wir was eingügen möchten.
+        */
+        String[] buttons = {"Doctor", "Department"};
+        int result=JOptionPane.showOptionDialog(this, "Tabelle wählen", "Insert",
+        JOptionPane.INFORMATION_MESSAGE, 0, null, buttons, null);
+        String update="";
+        PreparedStatement st=null;
+        try{
+            if(cbxTables.getSelectedItem()!=null){
+                /*
+                Falls wir Doctor wählen, dann das Insert anpassen und vorbereiten.
+                Dann werden 4 JOptionPanes angezeigt in einer Reihe, die nach den zu einfügenden Daten fragen.
+                Am Schluss, überprüfen ob die Eingaben nicht leer sind und ob die ID vom Doctor und Department Zahlen sind, dann die Parameter binden.
+                */
+                if(result==0){
+                    update="UPDATE doctor SET vorname=?,nachname=?,deptID=? WHERE ID=?";
+                    st=con.prepareStatement(update);
+                    
+                    String id=JOptionPane.showInputDialog(this,"ID:");
+                    String vn=JOptionPane.showInputDialog(this,"Name:");
+                    String nn=JOptionPane.showInputDialog(this,"Lastname:");
+                    String dId=JOptionPane.showInputDialog(this,"DeptID");
+                    if(!vn.equals("") && !nn.equals("") && !dId.equals("") && dId.matches("[0-9]+") && !dId.equals("") && dId.matches("[0-9]+")){
+                        st.setString(1, vn);
+                        st.setString(2, nn);
+                        st.setInt(3, Integer.parseInt(dId));
+                        st.setInt(4, Integer.parseInt(id));
+                    }
+                }
+                /*
+                Falls wir Department wählen, dann das Insert anpassen und vorbereiten.
+                Dann werden 3 JOptionPanes angezeigt in einer Reihe, die nach den zu einfügenden Daten fragen.
+                Am Schluss, überprüfen ob die Eingaben nicht leer sind und ob die ID vom Department eine Zahl ist, dann die Parameter binden.
+                */
+                else if(result==1){
+                    update="UPDATE department SET name=?,size=? WHERE deptID=?";
+                    st=con.prepareStatement(update);
+                    
+                    String id=JOptionPane.showInputDialog(this,"ID:");
+                    String n=JOptionPane.showInputDialog(this,"Name:");
+                    String s=JOptionPane.showInputDialog(this,"Size:");
+                    
+                    if(!n.equals("") && !s.equals("") && s.matches("[0-9]+") && !id.equals("") && id.matches("[0-9]+")){
+                        st.setString(1, n);
+                        st.setInt(2, Integer.parseInt(s));
+                        st.setInt(3, Integer.parseInt(id));
+                    }
+                }
+                //Statement ausführen.
+                st.executeUpdate();
+            }
+        }
+        catch(SQLException ex){
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Fehler beim Insert-Statement.", "Fehler", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_btnUpdateActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnConnect;
